@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Mark complete – Assignment Collision Detector{% endblock %}
+{% block content %}
+<div class="container form-page">
+    <h1>Mark assignment complete</h1>
+    <p><strong>{{ assignment.title }}</strong> ({{ assignment.subject }}) – estimated {{ assignment.estimated_effort_hours }} hours.</p>
+    <p>Enter actual time spent so we can improve priority recommendations for you.</p>
+    <form method="post" class="form-main">
+        <label for="actual_hours">Actual time spent (hours)</label>
+        <input type="number" id="actual_hours" name="actual_hours" step="0.5" min="0.1" required>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Mark complete</button>
+            <a href="{{ url_for('dashboard') }}" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

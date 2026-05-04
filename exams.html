@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Exams – Assignment Collision Detector{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Exams</h1>
+    <p><a href="{{ url_for('exam_add') }}" class="btn btn-primary">Add exam</a></p>
+    {% if exams %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Exam date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in exams %}
+            <tr>
+                <td>{{ e.subject }}</td>
+                <td>{{ e.exam_date.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <a href="{{ url_for('exam_edit', eid=e.id) }}" class="btn btn-small">Edit</a>
+                    <form method="post" action="{{ url_for('exam_delete', eid=e.id) }}" class="inline-form" onsubmit="return confirm('Delete this exam?');">
+                        <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No exams yet. <a href="{{ url_for('exam_add') }}">Add one</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}

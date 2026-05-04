@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Assignments – Assignment Collision Detector{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Assignments</h1>
+    <p><a href="{{ url_for('assignment_add') }}" class="btn btn-primary">Add assignment</a></p>
+    {% if assignments %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Title</th>
+                <th>Deadline</th>
+                <th>Effort (h)</th>
+                <th>Difficulty</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in assignments %}
+            <tr class="{% if a.completed %}row-completed{% endif %}">
+                <td>{{ a.subject }}</td>
+                <td>{{ a.title }}</td>
+                <td>{{ a.deadline.strftime('%Y-%m-%d') }}</td>
+                <td>{{ a.estimated_effort_hours }}</td>
+                <td>{{ a.difficulty }}/5</td>
+                <td>{% if a.completed %}Done{% else %}Pending{% endif %}</td>
+                <td>
+                    {% if not a.completed %}
+                        <a href="{{ url_for('assignment_complete', aid=a.id) }}" class="btn btn-small">Mark complete</a>
+                    {% endif %}
+                    <a href="{{ url_for('assignment_edit', aid=a.id) }}" class="btn btn-small">Edit</a>
+                    <form method="post" action="{{ url_for('assignment_delete', aid=a.id) }}" class="inline-form" onsubmit="return confirm('Delete this assignment?');">
+                        <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No assignments yet. <a href="{{ url_for('assignment_add') }}">Add one</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}

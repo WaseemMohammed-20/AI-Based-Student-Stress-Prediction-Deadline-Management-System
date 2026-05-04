@@ -1,0 +1,4 @@
+# AI-Assisted Assignment Collision Detector & Academic Stress Manager
+Flask>=2.3.0
+Flask-SQLAlchemy>=3.0.0
+Werkzeug>=2.3.0

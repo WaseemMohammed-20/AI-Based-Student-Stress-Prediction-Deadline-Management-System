@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Login – Assignment Collision Detector{% endblock %}
+{% block content %}
+<div class="container auth-page">
+    <div class="auth-card">
+        <h1>Log in</h1>
+        <form method="post" action="{{ url_for('login') }}" class="form-auth">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required autofocus>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit" class="btn btn-primary">Log in</button>
+        </form>
+        <p class="auth-link">Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
+    </div>
+</div>
+{% endblock %}

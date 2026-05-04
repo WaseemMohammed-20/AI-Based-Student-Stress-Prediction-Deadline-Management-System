@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if exam else 'Add' }} Exam – Assignment Collision Detector{% endblock %}
+{% block content %}
+<div class="container form-page">
+    <h1>{{ 'Edit' if exam else 'Add' }} exam</h1>
+    <form method="post" class="form-main">
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" name="subject" value="{{ exam.subject if exam else '' }}" required>
+        <label for="exam_date">Exam date</label>
+        <input type="date" id="exam_date" name="exam_date" value="{{ exam.exam_date.strftime('%Y-%m-%d') if exam and exam.exam_date else '' }}" required>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{{ url_for('exams_list') }}" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

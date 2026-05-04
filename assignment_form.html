@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if assignment else 'Add' }} Assignment – Assignment Collision Detector{% endblock %}
+{% block content %}
+<div class="container form-page">
+    <h1>{{ 'Edit' if assignment else 'Add' }} assignment</h1>
+    <form method="post" class="form-main">
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" name="subject" value="{{ assignment.subject if assignment else '' }}" required>
+        <label for="title">Assignment title</label>
+        <input type="text" id="title" name="title" value="{{ assignment.title if assignment else '' }}" required>
+        <label for="deadline">Deadline (date)</label>
+        <input type="date" id="deadline" name="deadline" value="{{ assignment.deadline.strftime('%Y-%m-%d') if assignment and assignment.deadline else '' }}" required>
+        <label for="estimated_effort">Estimated effort (hours)</label>
+        <input type="number" id="estimated_effort" name="estimated_effort" step="0.5" min="0" value="{{ assignment.estimated_effort_hours if assignment else '' }}" required>
+        <label for="difficulty">Difficulty (1–5)</label>
+        <input type="number" id="difficulty" name="difficulty" min="1" max="5" value="{{ assignment.difficulty if assignment else 1 }}" required>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{{ url_for('assignments_list') }}" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

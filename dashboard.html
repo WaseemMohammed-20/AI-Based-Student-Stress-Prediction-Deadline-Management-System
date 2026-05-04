@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Assignment Collision Detector{% endblock %}
+{% block content %}
+<div class="dashboard-wrap">
+    <div class="dashboard-container">
+        <!-- Top bar: title + quick actions -->
+        <header class="dashboard-header">
+            <h1 class="dashboard-title">Dashboard</h1>
+            <div class="dashboard-actions">
+                <a href="{{ url_for('assignment_add') }}" class="btn btn-primary btn-add">
+                    <span class="icon">+</span> Add task
+                </a>
+                <a href="{{ url_for('assignments_list') }}" class="btn btn-ghost">List</a>
+                <a href="{{ url_for('exams_list') }}" class="btn btn-ghost">Exams</a>
+            </div>
+        </header>
+
+        <!-- Sub-nav: Overview | Timeline | List (current view) -->
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('dashboard') }}" class="nav-item active">Overview</a>
+            <a href="#timeline" class="nav-item">Timeline</a>
+            <a href="{{ url_for('assignments_list') }}" class="nav-item">List</a>
+        </nav>
+
+        <!-- Alerts strip: collision warnings as colored tags -->
+        {% if collisions.seven_day or collisions.near_exam %}
+        <section class="dashboard-alerts">
+            <span class="alerts-label">Alerts</span>
+            {% if collisions.seven_day %}
+                {% for group in collisions.seven_day %}
+                    <span class="issue-flag flag-overload">7-day overload</span>
+                {% endfor %}
+            {% endif %}
+            {% if collisions.near_exam %}
+                {% for item in collisions.near_exam %}
+                    <span class="issue-flag flag-exam">Near exam</span>
+                {% endfor %}
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <div class="dashboard-grid">
+            <!-- Left: Task list (main content) -->
+            <section class="dashboard-main card card-panel">
+                <div class="card-header">
+                    <h2>
+                        <span class="icon icon-list"></span>
+                        Task list
+                    </h2>
+                    <span class="card-meta">Sort: Priority</span>
+                </div>
+                {% if assignments %}
+                <div class="table-wrap">
+                    <table class="table table-dashboard">
+                        <thead>
+                            <tr>
+                                <th class="col-num">#</th>
+                                <th class="col-name">Task name</th>
+                                <th class="col-due">Due date</th>
+                                <th class="col-progress">Progress</th>
+                                <th class="col-flag">Issue flag</th>
+                                <th class="col-actions"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in assignments %}
+                            <tr class="task-row {% if a.completed %}row-completed{% endif %}" data-id="{{ a.id }}">
+                                <td class="col-num">{{ loop.index }}</td>
+                                <td class="col-name">
+                                    <span class="task-status-icon {% if a.completed %}icon-done{% else %}icon-pending{% endif %}">
+                                        {% if a.completed %}✓{% else %}○{% endif %}
+                                    </span>
+                                    <span class="task-title">{{ a.title }}</span>
+                                    <span class="task-meta">{{ a.subject }}</span>
+                                </td>
+                                <td class="col-due">
+                                    <span class="due-date">{{ a.deadline.strftime('%b %d, %Y') }}</span>
+                                </td>
+                                <td class="col-progress">
+                                    <div class="progress-cell">
+                                        <div class="progress-bar-wrap">
+                                            <div class="progress-bar" style="width: {% if a.completed %}100{% else %}0{% endif %}%" data-level="{% if a.difficulty >= 4 %}high{% elif a.difficulty >= 3 %}mid{% else %}low{% endif %}"></div>
+                                        </div>
+                                        <span class="progress-pct">{% if a.completed %}100%{% else %}0%{% endif %}</span>
+                                    </div>
+                                </td>
+                                <td class="col-flag">
+                                    {% if a.id in assignment_ids_in_collision %}
+                                        <span class="issue-flag flag-collision">Collision</span>
+                                    {% elif not a.completed %}
+                                        <span class="issue-flag flag-pending">Pending</span>
+                                    {% else %}
+                                        <span class="issue-flag flag-done">Done</span>
+                                    {% endif %}
+                                </td>
+                                <td class="col-actions">
+                                    {% if not a.completed %}
+                                        <a href="{{ url_for('assignment_complete', aid=a.id) }}" class="btn-icon" title="Mark complete">✓</a>
+                                    {% endif %}
+                                    <a href="{{ url_for('assignment_edit', aid=a.id) }}" class="btn-icon" title="Edit">✎</a>
+                                    <form method="post" action="{{ url_for('assignment_delete', aid=a.id) }}" class="inline-form" onsubmit="return confirm('Delete this assignment?');">
+                                        <button type="submit" class="btn-icon btn-icon-danger" title="Delete">×</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="empty-state muted">No assignments yet. <a href="{{ url_for('assignment_add') }}">Add a task</a> to get started.</p>
+                {% endif %}
+            </section>
+
+            <!-- Right: Side panel - Recommended order + Stress + Collision detail -->
+            <aside class="dashboard-side">
+                <!-- Recommended order -->
+                <section class="card card-panel card-compact">
+                    <div class="card-header">
+                        <h2><span class="icon icon-priority"></span> Recommended order</h2>
+                    </div>
+                    {% if recommended %}
+                    <ol class="recommended-list">
+                        {% for a, score in recommended %}
+                        <li class="rec-item">
+                            <span class="rec-rank">{{ loop.index }}</span>
+                            <div class="rec-body">
+                                <strong>{{ a.title }}</strong>
+                                <span class="rec-meta">{{ a.subject }} · {{ a.deadline.strftime('%b %d') }} · {{ a.estimated_effort_hours }}h</span>
+                            </div>
+                            <a href="{{ url_for('assignment_complete', aid=a.id) }}" class="btn btn-small">Complete</a>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                    {% else %}
+                    <p class="muted small">No pending tasks. Add assignments to see AI priority order.</p>
+                    {% endif %}
+                </section>
+
+                <!-- Stress week indicator -->
+                <section class="card card-panel card-compact">
+                    <div class="card-header">
+                        <h2><span class="icon icon-calendar"></span> Stress by week</h2>
+                    </div>
+                    <p class="stress-legend">
+                        <span class="dot dot-high">High Stress</span>
+                        <span class="dot dot-busy">Busy</span>
+                        <span class="dot dot-normal">Normal</span>
+                    </p>
+                    <div class="stress-weeks stress-weeks-compact">
+                        {% for week_key, info in stress_weeks_list %}
+                        <div class="stress-week-item stress-{{ info.level|lower|replace(' ', '-') }}">
+                            <span class="stress-week-date">{{ week_key }}</span>
+                            <span class="stress-week-level">{{ info.level }}</span>
+                            <span class="stress-week-effort">{{ info.effort }}h{% if info.has_exam %} + exam{% endif %}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if not stress_weeks_list %}
+                    <p class="muted small">Add assignments and exams to see weekly stress.</p>
+                    {% endif %}
+                </section>
+
+                <!-- Collision detail (expandable) -->
+                {% if collisions.seven_day or collisions.near_exam %}
+                <section class="card card-panel card-compact card-warning">
+                    <div class="card-header">
+                        <h2><span class="icon icon-warning"></span> Collision detail</h2>
+                    </div>
+                    {% if collisions.seven_day %}
+                    <p class="small"><strong>Same week:</strong></p>
+                    <ul class="collision-detail-list">
+                        {% for group in collisions.seven_day %}
+                        <li>{% for a, dl in group %}{{ a.title }} ({{ dl.strftime('%b %d') }}){% if not loop.last %}; {% endif %}{% endfor %}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% if collisions.near_exam %}
+                    <p class="small"><strong>Near exam:</strong></p>
+                    <ul class="collision-detail-list">
+                        {% for item in collisions.near_exam %}
+                        <li>{{ item.assignment.title }} ↔ {{ item.exam.subject }} ({{ item.days_between }}d)</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </section>
+                {% endif %}
+            </aside>
+        </div>
+
+        <!-- Timeline: Weekly workload chart (Gantt-like) -->
+        <section class="card card-panel chart-panel" id="timeline">
+            <div class="card-header">
+                <h2><span class="icon icon-chart"></span> Weekly workload</h2>
+                <span class="card-meta">Estimated hours per week</span>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="workloadChart"></canvas>
+            </div>
+        </section>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
